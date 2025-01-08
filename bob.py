@@ -32,7 +32,7 @@ bobKeypair = Keypair.create_from_mnemonic(bobSeed)
 
 # Connect to a Substrate-based blockchain
 substrate = SubstrateInterface(
-    url="wss://wsspc1-qa.agung.peaq.network",
+    url="wss://wss-async.agung.peaq.network",
     # ss58_format=42,  # Replace with the SS58 format of your chain
     # type_registry_preset="substrate-node-template",
 )
@@ -94,8 +94,8 @@ async def store_sensor_data_on_chain(data: AirSensorData):
 
     # Create an extrinsic call to store or update the air sensor data
     call = substrate.compose_call(
-        call_module='PeaqStorage',  
-        call_function=call_function,   
+        call_module='PeaqStorage',
+        call_function=call_function,
         call_params={
             'item_type': 'AirSensorData',
             'item': data_string,
@@ -124,7 +124,7 @@ async def storeAddressMapping(value: str, type: str):
     if item:
         # if item == value:
         #     return
-        
+
         # call = substrate.compose_call(
         #     call_module='PeaqStorage',
         #     call_function='update_item',
@@ -224,7 +224,7 @@ async def check_balance(ctx: Context):
 async def request_sensor_data(ctx: Context):
     ctx.logger.info(f"Checking balance before requesting air sensor data from Alice.")
     balance = await getBalance(bobKeypair.ss58_address)
-    
+
     if balance < DATA_PRICE:
         ctx.logger.warning(f"Insufficient balance to pay for data. Not requesting data from Alice.")
         return
@@ -236,9 +236,9 @@ async def request_sensor_data(ctx: Context):
         return
     agentAddress = mappedAddress.split(':')[0]
     print("agent address before sendng ", agentAddress)
-    
+
     # Send the data request to Alice using the resolved address
-    await ctx.send(agentAddress, RequestAirSensorData()) 
+    await ctx.send(agentAddress, RequestAirSensorData())
 
 @bob.on_message(model=AirSensorData)
 async def handle_sensor_data(ctx: Context, sender: str, msg: AirSensorData):
@@ -246,16 +246,16 @@ async def handle_sensor_data(ctx: Context, sender: str, msg: AirSensorData):
     if not msg or msg.temperature is None or msg.humidity is None or msg.lux is None or msg.pressure is None:
         ctx.logger.info(f"No valid air sensor data received from {sender}.")
         return
-    
+
     ctx.logger.info(f"Received air sensor data from {sender}: Temperature: {msg.temperature}, Humidity: {msg.humidity}, Lux: {msg.lux}, Pressure: {msg.pressure}")
-    
+
     # Store the received data on the blockchain
     await store_sensor_data_on_chain(msg)
     senderSubstrateAddress = getAddressMapping(sender.replace("agent", ""), peaqKeypair.ss58_address)
-    
+
     ctx.logger.info(f"Sending {DATA_PRICE} tokens to substrate address {senderSubstrateAddress} as payment for the data.")
     await transferBalance(senderSubstrateAddress, DATA_PRICE, bobKeypair)
- 
+
 
 @bob.on_message(model=Transfer)
 async def message_handler(ctx: Context, sender: str, msg: Transfer):

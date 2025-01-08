@@ -44,7 +44,7 @@ aliceKeyPair = Keypair.create_from_mnemonic(aliceSeed)
 
 # Connect to a Substrate-based blockchain
 substrate = SubstrateInterface(
-    url="wss://wsspc1-qa.agung.peaq.network",
+    url="wss://wss-async.agung.peaq.network",
     # ss58_format=42,  # Replace with the SS58 format of your chain
     # type_registry_preset="substrate-node-template",
 )
@@ -140,7 +140,7 @@ async def storeAddressMapping(value: str, type: str):
     if item:
         # if item == value:
         #     return
-        
+
         # call = substrate.compose_call(
         #     call_module='PeaqStorage',
         #     call_function='update_item',
@@ -240,8 +240,8 @@ async def check_balance(ctx: Context):
         fetchAgentBalance = ctx.ledger.query_bank_balance(walletAddress)
         ctx.logger.info(f"agent's balance: {fetchAgentBalance}")
         await ctx.send(agentAddress, Transfer(amount=(minimum_balance - balance)))
-        
-    
+
+
 
 @alice.on_message(model=Transfer)
 async def message_handler(ctx: Context, sender: str, msg: Transfer):
@@ -259,7 +259,7 @@ async def message_handler(ctx: Context, sender: str, msg: Transfer):
 @alice.on_message(model=RequestAirSensorData)
 async def send_latest_telemetry(ctx: Context, sender: str, msg: RequestAirSensorData):
     ctx.logger.info(f"Received data request from {sender}. Sending latest telemetry data.")
-    
+
     # Get the latest telemetry data
     latest_data = telemetry_data[-1] if telemetry_data else None
     if latest_data:
@@ -269,7 +269,7 @@ async def send_latest_telemetry(ctx: Context, sender: str, msg: RequestAirSensor
             lux=latest_data["lux"],
             pressure=latest_data["pressure"]
         )
-        
+
         # Send the data back to Bob
         await ctx.send(sender, data)
     else:
